@@ -1,0 +1,443 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+// =====================================
+// CSR Dashboard Database Schema - Single Tenant
+// =====================================
+
+// Company/Organization Info (Single Tenant)
+model Company {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  address     String?
+  phone       String?
+  email       String?
+  website     String?
+  logo        String?
+  description String?
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@map("company")
+}
+
+// Departments/Divisions within the company
+model Department {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  code        String   @unique
+  description String?
+  parentId    String?
+  parent      Department? @relation("DepartmentHierarchy", fields: [parentId], references: [id])
+  children    Department[] @relation("DepartmentHierarchy")
+  headId      String? // Department head
+  status      String   @default("active")
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users      User[]
+  programs   Program[]
+  budgets    Budget[]
+  activities Activity[]
+  reports    Report[]
+
+  @@map("departments")
+}
+
+// Role-Based Access Control
+model Role {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  permissions String // JSON array of permissions
+  level       String   @default("user") // 'super_admin' | 'admin' | 'manager' | 'user'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  users User[]
+
+  @@map("roles")
+}
+
+// Users Management
+model User {
+  id           String      @id @default(cuid())
+  email        String      @unique
+  password     String      // Hashed password
+  name         String
+  avatar       String?
+  phone        String?
+  position     String?
+  employeeId   String?     @unique // Employee ID
+  departmentId String      
+  department   Department  @relation(fields: [departmentId], references: [id])
+  roleId       String
+  role         Role        @relation(fields: [roleId], references: [id])
+  status       String      @default("active") // 'active' | 'inactive' | 'suspended'
+  lastLogin    DateTime?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  createdPrograms    Program[]     @relation("ProgramCreator")
+  assignedActivities Activity[]    @relation("ActivityAssignee")
+  stakeholderLinks   Stakeholder[]
+
+  @@map("users")
+}
+
+// CSR Program Categories
+model CategoryProgram {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  description String?
+  color     String?  // For UI categorization
+  icon      String?  // Icon name for UI
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  programs Program[]
+
+  @@map("category_programs")
+}
+
+// CSR Program Types
+model TypeProgram {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  description String?
+  duration  String?  // 'short_term' | 'long_term' | 'ongoing'
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations  
+  programs Program[]
+
+  @@map("type_programs")
+}
+
+// CSR Programs
+model Program {
+  id                String          @id @default(cuid())
+  name              String
+  description       String?
+  categoryId        String
+  typeId            String
+  category          CategoryProgram @relation(fields: [categoryId], references: [id])
+  type              TypeProgram     @relation(fields: [typeId], references: [id])
+  status            String          @default("draft") // 'draft' | 'approved' | 'active' | 'completed' | 'cancelled'
+  priority          String          @default("medium") // 'low' | 'medium' | 'high' | 'critical'
+  startDate         DateTime
+  endDate           DateTime
+  targetBeneficiary Int?
+  targetArea        String?
+  objectives        String?         // Program objectives
+  expectedOutcome   String?         // Expected outcomes
+  departmentId      String
+  department        Department      @relation(fields: [departmentId], references: [id])
+  createdById       String
+  createdBy         User            @relation("ProgramCreator", fields: [createdById], references: [id])
+  approvedAt        DateTime?
+  approvedBy        String?
+  createdAt         DateTime        @default(now())
+  updatedAt         DateTime        @updatedAt
+
+  // Relations
+  projects     Project[]
+  stakeholders ProgramStakeholder[]
+  budgets      Budget[]
+  reports      Report[]
+
+  @@map("programs")
+}
+
+// Projects (Sub-programs)
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  description String?
+  status      String   @default("planned") // 'planned' | 'active' | 'completed' | 'cancelled'
+  progress    Float    @default(0) // 0-100%
+  startDate   DateTime
+  endDate     DateTime
+  budget      Float?   // Project budget allocation
+  actualCost  Float?   // Actual spent cost
+  programId   String
+  program     Program  @relation(fields: [programId], references: [id])
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  activities Activity[]
+  budgets    Budget[]
+
+  @@map("projects")
+}
+
+// Activities
+model Activity {
+  id           String     @id @default(cuid())
+  name         String
+  description  String?
+  type         String // 'workshop' | 'training' | 'donation' | 'campaign' | 'construction' | 'other'
+  status       String     @default("planned") // 'planned' | 'ongoing' | 'completed' | 'cancelled'
+  priority     String     @default("medium") // 'low' | 'medium' | 'high'
+  startDate    DateTime
+  endDate      DateTime
+  location     String?
+  participants Int?
+  budget       Float?
+  actualCost   Float?
+  progress     Float      @default(0) // 0-100%
+  projectId    String
+  project      Project    @relation(fields: [projectId], references: [id])
+  departmentId String
+  department   Department @relation(fields: [departmentId], references: [id])
+  assignedToId String?
+  assignedTo   User?      @relation("ActivityAssignee", fields: [assignedToId], references: [id])
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  // Relations
+  stakeholders ActivityStakeholder[]
+  reports      ActivityReport[]
+
+  @@map("activities")
+}
+
+// Stakeholder Categories
+model StakeholderCategory {
+  id          String   @id @default(cuid())
+  name        String   @unique
+  description String?
+  type        String // 'internal' | 'external' | 'community' | 'government'
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relations
+  stakeholders Stakeholder[]
+
+  @@map("stakeholder_categories")
+}
+
+// Stakeholders Management
+model Stakeholder {
+  id              String              @id @default(cuid())
+  name            String
+  type            String // 'individual' | 'organization' | 'community' | 'government'
+  categoryId      String
+  category        StakeholderCategory @relation(fields: [categoryId], references: [id])
+  contact         String?
+  email           String?
+  phone           String?
+  address         String?
+  description     String?
+  importance      String              @default("medium") // 'low' | 'medium' | 'high'
+  influence       String              @default("medium") // 'low' | 'medium' | 'high'
+  relationship    String              @default("neutral") // 'supporter' | 'neutral' | 'opponent'
+  contactPersonId String?
+  contactPerson   User?               @relation(fields: [contactPersonId], references: [id])
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+
+  // Relations
+  programs   ProgramStakeholder[]
+  activities ActivityStakeholder[]
+
+  @@map("stakeholders")
+}
+
+// Program-Stakeholder relationships
+model ProgramStakeholder {
+  id            String      @id @default(cuid())
+  programId     String
+  program       Program     @relation(fields: [programId], references: [id])
+  stakeholderId String
+  stakeholder   Stakeholder @relation(fields: [stakeholderId], references: [id])
+  role          String // 'beneficiary' | 'partner' | 'sponsor' | 'implementer'
+  engagement    String      @default("low") // 'low' | 'medium' | 'high'
+  expectation   String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([programId, stakeholderId])
+  @@map("program_stakeholders")
+}
+
+// Activity-Stakeholder relationships
+model ActivityStakeholder {
+  id            String      @id @default(cuid())
+  activityId    String
+  activity      Activity    @relation(fields: [activityId], references: [id])
+  stakeholderId String
+  stakeholder   Stakeholder @relation(fields: [stakeholderId], references: [id])
+  role          String // 'participant' | 'facilitator' | 'sponsor' | 'beneficiary'
+  participation String      @default("confirmed") // 'invited' | 'confirmed' | 'attended' | 'absent'
+  feedback      String?
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+
+  @@unique([activityId, stakeholderId])
+  @@map("activity_stakeholders")
+}
+
+// Budget Management
+model Budget {
+  id             String      @id @default(cuid())
+  name           String
+  type           String // 'program' | 'project' | 'activity'
+  category       String // 'operational' | 'capital' | 'personnel' | 'materials' | 'services'
+  amount         Float
+  currency       String      @default("IDR")
+  status         String      @default("proposed") // 'proposed' | 'approved' | 'allocated' | 'spent'
+  approvedAmount Float?
+  spentAmount    Float       @default(0)
+  period         String // 'Q1-2024' | '2024' | etc
+  departmentId   String
+  department     Department  @relation(fields: [departmentId], references: [id])
+  programId      String?
+  program        Program?    @relation(fields: [programId], references: [id])
+  projectId      String?
+  project        Project?    @relation(fields: [projectId], references: [id])
+  approvedAt     DateTime?
+  approvedBy     String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+
+  @@map("budgets")
+}
+
+// Reporting System - Enhanced
+model Report {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  type        String // 'program' | 'quarterly' | 'annual' | 'impact' | 'financial' | 'custom'
+  status      String    @default("draft") // 'draft' | 'review' | 'approved' | 'published'
+  content     String // JSON content (rich text, sections, etc)
+  metrics     String? // JSON metrics data (calculated KPIs)
+  period      String // 'Q1-2024' | '2024' | 'Jan-2024' | custom range
+  startDate   DateTime?
+  endDate     DateTime?
+  
+  // Relations
+  programId   String?
+  program     Program?  @relation(fields: [programId], references: [id])
+  departmentId String?
+  department  Department? @relation(fields: [departmentId], references: [id])
+  
+  // Report Metadata
+  template    String? // Template name used
+  coverImage  String? // Cover image URL
+  tags        String? // JSON array of tags
+  version     Int      @default(1)
+  
+  // Approval workflow
+  submittedBy  String?
+  submittedAt  DateTime?
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  approvedBy   String?
+  approvedAt   DateTime?
+  publishedAt  DateTime?
+  
+  // Stats
+  viewCount    Int      @default(0)
+  downloadCount Int     @default(0)
+  
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  // Relations
+  activityReports ActivityReport[]
+  metrics_records ReportMetrics[]
+
+  @@map("reports")
+}
+
+// Report Metrics - For tracking KPIs
+model ReportMetrics {
+  id        String   @id @default(cuid())
+  reportId  String
+  report    Report   @relation(fields: [reportId], references: [id], onDelete: Cascade)
+  
+  // Financial Metrics
+  totalBudget      Float?
+  budgetUsed       Float?
+  budgetRemaining  Float?
+  budgetPercentage Float?
+  
+  // Program Metrics
+  totalPrograms    Int?
+  activePrograms   Int?
+  completedPrograms Int?
+  
+  // Activity Metrics
+  totalActivities  Int?
+  completedActivities Int?
+  ongoingActivities Int?
+  
+  // Stakeholder Metrics
+  totalStakeholders Int?
+  totalBeneficiaries Int?
+  satisfactionScore Float?
+  
+  // Impact Metrics
+  socialImpact     Float?
+  environmentalImpact Float?
+  economicImpact   Float?
+  
+  // Custom Metrics
+  customMetrics    String? // JSON for flexible metrics
+  
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("report_metrics")
+}
+
+// Activity Reports - Enhanced
+model ActivityReport {
+  id         String   @id @default(cuid())
+  activityId String
+  activity   Activity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  reportId   String?
+  report     Report?  @relation(fields: [reportId], references: [id], onDelete: SetNull)
+  
+  // Report Content
+  summary    String?
+  impact     String? // JSON impact data
+  outcomes   String? // JSON outcomes data
+  challenges String?
+  lessons    String?
+  recommendations String?
+  
+  // Media
+  photos     String? // JSON array of photo URLs
+  videos     String? // JSON array of video URLs
+  documents  String? // JSON array of document URLs
+  
+  // Metrics
+  participantCount Int?
+  beneficiaryCount Int?
+  satisfactionRate Float?
+  
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("activity_reports")
+}

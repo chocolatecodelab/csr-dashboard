@@ -61,7 +61,7 @@ export function Sidebar() {
         )}
         aria-label="Main navigation"
         aria-hidden={!isOpen}
-        inert={!isOpen}
+        {...(!isOpen && { inert: "" as any })}
       >
         <div className="flex h-full flex-col py-10 pl-[25px] pr-[7px]">
           <div className="relative pr-4.5">
@@ -124,7 +124,7 @@ export function Sidebar() {
 
                             {expandedItems.includes(item.title) && (
                               <ul
-                                className="ml-9 mr-0 space-y-1.5 pb-[15px] pr-0 pt-2"
+                                className="ml-2 mr-0 space-y-1.5 pb-[15px] pr-0 pt-2"
                                 role="menu"
                               >
                                 {item.items.map((subItem) => (
@@ -134,7 +134,13 @@ export function Sidebar() {
                                       href={subItem.url}
                                       isActive={pathname === subItem.url}
                                     >
-                                      <span>{subItem.title}</span>
+                                      <span>
+                                        <subItem.icon
+                                          className="mr-2 inline-block size-5"
+                                          aria-hidden="true"
+                                        />
+                                        {subItem.title}
+                                      </span>
                                     </MenuItem>
                                   </li>
                                 ))}

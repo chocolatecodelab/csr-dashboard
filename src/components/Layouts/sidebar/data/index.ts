@@ -1,3 +1,4 @@
+import { url } from "inspector";
 import * as Icons from "../icons";
 
 export const NAV_DATA = [
@@ -7,97 +8,110 @@ export const NAV_DATA = [
       {
         title: "Dashboard",
         icon: Icons.HomeIcon,
+        url: "/",
+        items: [],
+      },
+    ],
+  },
+  {
+    label: "PROGRAM CSR",
+    items: [
+      {
+        title: "Data Program",
+        icon: Icons.Heart,
+        url: "/programs",
         items: [
-          {
-            title: "eCommerce",
-            url: "/",
-          },
         ],
       },
       {
-        title: "Calendar",
-        url: "/calendar",
+        title: "Stakeholder",
+        icon: Icons.UserGroup,
+        url: "/stakeholders",
+        items: [
+        ],
+      },
+      {
+        title: "Sub Program",
+        icon: Icons.FourCircle,
+        url: "/sub-programs",
+        items: [
+        ],
+      },
+      {
+        title: "Aktivitas",
         icon: Icons.Calendar,
-        items: [],
+        url: "/activities",
+        items: [
+        ],
       },
       {
-        title: "Profile",
-        url: "/profile",
-        icon: Icons.User,
-        items: [],
+        title: "Anggaran",
+        icon: Icons.CurrencyDollar,
+        url: "/budgets",
+        items: [
+        ],
+      },
+    ],
+  },
+  {
+    label: "LAPORAN & ANALISIS",
+    items: [
+      {
+        title: "Laporan Program",
+        icon: Icons.DocumentReport,
+        url: "/reports",
+        items: [
+        ],
       },
       {
-        title: "Forms",
-        icon: Icons.Alphabet,
+        title: "Analytics & Insights",
+        icon: Icons.ChartBar,
+        url: "/analytics",
+        items: [
+        ],
+      },
+    ],
+  },
+  {
+    label: "MANAJEMEN AKUN",
+    items: [
+      {
+        title: "Akun Pengguna",
+        icon: Icons.UserGroup,
         items: [
           {
-            title: "Form Elements",
-            url: "/forms/form-elements",
-          },
-          {
-            title: "Form Layout",
-            url: "/forms/form-layout",
+            title: "Daftar Pengguna",
+            url: "/management/users",
+            icon: Icons.More,
           },
         ],
       },
       {
-        title: "Tables",
-        url: "/tables",
-        icon: Icons.Table,
+        title: "Role & Permission",
+        icon: Icons.Shield,
         items: [
           {
-            title: "Tables",
-            url: "/tables",
+            title: "Daftar Role",
+            url: "/management/roles",
+            icon: Icons.More,
           },
-        ],
-      },
-      {
-        title: "Pages",
-        icon: Icons.Alphabet,
-        items: [
           {
-            title: "Settings",
-            url: "/pages/settings",
+            title: "Daftar Permission",
+            url: "/management/permissions",
+            icon: Icons.More,
           },
         ],
       },
     ],
   },
   {
-    label: "OTHERS",
+    label: "PENGATURAN",
     items: [
       {
-        title: "Charts",
-        icon: Icons.PieChart,
+        title: "Pengaturan Sistem",
+        icon: Icons.Cog,
+        url: "/settings",
         items: [
-          {
-            title: "Basic Chart",
-            url: "/charts/basic-chart",
-          },
-        ],
-      },
-      {
-        title: "UI Elements",
-        icon: Icons.FourCircle,
-        items: [
-          {
-            title: "Alerts",
-            url: "/ui-elements/alerts",
-          },
-          {
-            title: "Buttons",
-            url: "/ui-elements/buttons",
-          },
-        ],
-      },
-      {
-        title: "Authentication",
-        icon: Icons.Authentication,
-        items: [
-          {
-            title: "Sign In",
-            url: "/auth/sign-in",
-          },
         ],
       },
     ],

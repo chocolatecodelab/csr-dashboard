@@ -1,5 +1,18 @@
 /** @type {import("next").NextConfig} */
 const nextConfig = {
+  reactStrictMode: false,
+  swcMinify: true,
+  typescript: {
+    ignoreBuildErrors: false,
+  },
+  eslint: {
+    ignoreDuringBuilds: false,
+  },
+  experimental: {
+    serverActions: {
+      bodySizeLimit: '2mb',
+    },
+  },
   images: {
     remotePatterns: [
       {

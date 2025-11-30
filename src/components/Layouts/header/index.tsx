@@ -33,16 +33,22 @@ export function Header() {
           />
         </Link>
       )}
-
-      <div className="max-xl:hidden">
-        <h1 className="mb-0.5 text-heading-5 font-bold text-dark dark:text-white">
+      <button
+        onClick={toggleSidebar}
+        className="rounded-lg border px-1.5 py-1 dark:border-stroke-dark dark:bg-[#020D1A] hover:dark:bg-[#FFFFFF1A]"
+      >
+        <MenuIcon />
+        <span className="sr-only">Toggle Sidebar</span>
+      </button>
+      <div className="max-xl:hidden ml-4">
+        <h1 className="mb-0.5  text-heading-5 font-bold text-dark dark:text-white">
           Dashboard
         </h1>
-        <p className="font-medium">Next.js Admin Dashboard Solution</p>
+        <p className="font-medium">Sustainesia Digital CSR</p>
       </div>
 
       <div className="flex flex-1 items-center justify-end gap-2 min-[375px]:gap-4">
-        <div className="relative w-full max-w-[300px]">
+        <div className="relative w-full max-w-[300px] max-md:hidden">
           <input
             type="search"
             placeholder="Search"
