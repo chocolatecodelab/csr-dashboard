@@ -1,0 +1,16 @@
+# Vercel Ignore
+.env.local
+.env*.local
+*.log
+.DS_Store
+Thumbs.db
+
+# Development files
+*.md
+!README.md
+
+# Test files
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
